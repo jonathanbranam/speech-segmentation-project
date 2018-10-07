@@ -45,7 +45,7 @@
 %
 % For tracking purposes - this is V2.0 - May 2012
 
-\documentclass{sig-alternate}
+\documentclass{e511-project}
 
 \begin{document}
 %
@@ -136,13 +136,14 @@ Permutation Invariant Training (PIT) from
 Invariant Training (uPIT) from
 \cite{DBLP:journals/corr/YuKTJ16}
 as these seem to be the latest approaches to
-single source sound separation in the academic literature. The call
+single source speaker separation in the academic literature. The call
 center recordings are not currently labeled, so we propose creating
 our own test and training dataset by mixing single-speaker recordings
-from either the TIMIT or WSJ0 recordings. The literature mentions the
-WSJ0-2mix data set that was used in
+from either the TIMIT \cite{garofolo:timit} or WSJ0 
+\cite{garofolo:wsj0} recordings.
+The literature mentions the WSJ0-2mix data set that was used in
 \cite{DBLP:journals/corr/HersheyCRW15} the seminal Deep Clustering
-(DPCL) paper but we have yet to find a specification for how to
+(DPCL) paper but we have yet to find a detailed specification for how to
 generate this dataset.
 
 
@@ -154,7 +155,7 @@ generate this dataset.
 % initial runs of your .tex file to
 % produce the bibliography for the citations in your paper.
 \bibliographystyle{abbrv}
-\bibliography{e511_proposal}
+\bibliography{e511-proposal}
 % You must have a proper ".bib" file
 %  and remember to run:
 % latex bibtex latex latex
