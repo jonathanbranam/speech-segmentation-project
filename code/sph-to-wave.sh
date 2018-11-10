@@ -1,7 +1,5 @@
 #!/usr/bin/env bash
 
-# find "$1" \( -iname \*.wv1 -o -iname \*.wv2 \) -exec sh -c 'echo sph2pipe -f rif "$1" "${1%.*}".wav' _ {} \;
-
 root_dir="$1"
 shift
 
