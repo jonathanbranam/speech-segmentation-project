@@ -17,11 +17,19 @@
 %   Apache 2.0  (http://www.apache.org/licenses/LICENSE-2.0) 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
+% Check if we are running in octave and load packages
+% https://octave.org/doc/v4.0.3/How-to-distinguish-between-Octave-and-Matlab_003f.html
+if (exist ("OCTAVE_VERSION", "builtin") > 0)
+  pkg load control
+  pkg load signal
+end
 
 data_type = {'tr','cv','tt'};
-wsj0root = '/db/processed/public/WSJ0WAV_full/'; % YOUR_PATH/, the folder containing wsj0/
-output_dir16k='/mm1/leroux/wsj0-mix/2speakers/wav16k';
-output_dir8k='/mm1/leroux/wsj0-mix/2speakers/wav8k';
+% wsj0root must end with a '/' character!
+% YOUR_PATH/, the folder containing wsj0/
+wsj0root = '/Volumes/user/jbranam/files/study/iums/E511_MLSP/project/data/wsj0-merged/';
+output_dir16k='/Volumes/user/jbranam/files/study/iums/E511_MLSP/project/data/wsj0-mix/2speakers/wav16k';
+output_dir8k='/Volumes/user/jbranam/files/study/iums/E511_MLSP/project/data/wsj0-mix/2speakers/wav8k';
 
 min_max = {'min','max'};
 
