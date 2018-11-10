@@ -32,7 +32,7 @@ wsj0root = '/Volumes/user/jbranam/files/study/iums/E511_MLSP/project/data/wsj0-m
 output_dir16k='/Volumes/user/jbranam/files/study/iums/E511_MLSP/project/data/wsj0-mix/3speakers/wav16k';
 output_dir8k='/Volumes/user/jbranam/files/study/iums/E511_MLSP/project/data/wsj0-mix/3speakers/wav8k';
 
-min_max = {'min'}; %{'min','max'};
+min_max = {'min'}; % {'min','max'};
 
 for i_mm = 1:length(min_max)
     for i_type = 1:length(data_type)
