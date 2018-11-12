@@ -1,5 +1,12 @@
 #!/usr/bin/env bash
 
+# Usage
+# sph-to-wave.sh DIRECTORY PATH-TO-SPH2PIPE [remove-orig]
+# DIRECTORY: directory to process
+# PATH-TO-SPH2PIPE: path to sph2pipe (if not in your path)
+# remove-orig: if specified will remove the original file during processing
+# sph-to-wave.sh wsj0-merged ../sph2pipe_v2.5/sph2pipe remove-orig
+
 root_dir="$1"
 shift
 
