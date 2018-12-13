@@ -106,11 +106,12 @@
                         % and documentation can be obtained at:
                         % http://www.ctan.org/tex-archive/macros/latex/required/amslatex/math/
 
-
+\usepackage{bm}
+\usepackage{booktabs}
 
 % Other popular packages for formatting tables and equations include:
 
-%\usepackage{array}
+\usepackage{array}
 % Frank Mittelbach's and David Carlisle's array.sty which improves the
 % LaTeX2e array and tabular environments to provide better appearances and
 % additional user controls. array.sty is already installed on most systems.
@@ -221,7 +222,7 @@ here it is the results for speaker diarization.
 In this case, we don't have any labeled data to calculate the training error, we just simply used human ears to justify whether the diarization was good or not. For some training data, it works well, but some training data, it performed really bad. 
 
 \subsection{NMF, IRM and cIRM}
-Nonnegative matrix factorization (NMF) is used to represent high-dminesional data as the product of two matrices (typically referenced as \textit{W} and \textit{H}). In the case of an audio signal, these matrices can be viewed as a representation of the signal's frequency spectrum (\textit{W}) and the corresponding activations (\textit{H}).
+Nonnegative matrix factorization (NMF) is used to represent high-dimensional data as the product of two matrices (typically referenced as $W$ and $H$). In the case of an audio signal, these matrices can be viewed as a representation of the signal's frequency spectrum ($W$) and the corresponding activations ($H$).
 
 To perform NMF, we transformed isolated audio samples of two speakers (speaker 1 and speaker 2) to a frequency-time representation using short-time Fourier transform (STFT) before decomposing each signal using the following iterative update rules:
 \newline
@@ -229,59 +230,45 @@ To perform NMF, we transformed isolated audio samples of two speakers (speaker 1
 $W = W \bigodot \frac{\frac{X}{WH}H^T}{1{FxT}H^T}$ \hspace{1cm} $H = H \bigodot \frac{W^T\frac{X}{WH}}{W^T1^{FxT}}$
 \newline
 
-Using the frequency matrices associated with the sample from each speaker, a new set of activations (\textit{W}) was generated from the mixed signal composed of both individual samples. A magnitude masking matrix, reflecting the magnitudes associated with the frequency representation for each speaker at each time frame, was generated using this new set of activations and the following formula:
+Using the frequency matrices associated with the sample from each speaker, a new set of activations ($W$) was generated from the mixed signal composed of both individual samples. A magnitude masking matrix, reflecting the magnitudes associated with the frequency representation for each speaker at each time frame, was generated using this new set of activations and the following formula:
 
-\begin{center}
-$W_{S1}H_{(1:30,:)}$
 
-\rule[1pt]{100pt}{.4pt}
-
-$W_{S1}H_{(1:30,:)}+W_{S2}H_{(31:60,:)}  $
-
-\end{center}
-
+\[
+\dfrac{W_{S1}H_{(1:30,:)}}
+{W_{S1}H_{(1:30,:)}+W_{S2}H_{(31:60,:)}}
+\]
 
 \begin{flushleft}
 where S1 is the basis vector associated with the speaker 1 audio sample, S2 is the basis vector associated with the speaker 2 audio sample and H is the activation matrix generated from the combined speaker 1 and speaker 2 basis vectors.\cite{ClassNMF}
 \end{flushleft}
 
-Using the STFT of a single speaker audio sample (speaker 1) and the STFT of the mixed audio sample that included speaker 1 [Figure 1], an IRM was generated based on the formula:
-\begin{center}
-$S_{(t,f)}^2$
+Using the STFT of a single speaker audio sample (speaker 1) and the STFT of the mixed audio sample that included speaker 1 (Figure \ref{fig:spec_speaker_1}), an IRM was generated based on the formula:
 
-\rule[1pt]{40pt}{.4pt}
-
-$S_{(t,f)}^2 + N_{(t,f)}^2  $
-
-\end{center}
-
+\[
+\dfrac{S_{(t,f)}^2}{S_{(t,f)}^2 + N_{(t,f)}^2}
+\]
 
 \begin{flushleft}
 
-where S is the STFT generated from the isolated speaker 1 audio signal and N is the STFT generated fromm the mixed audio signal that included the same audio sample of speaker 1.\cite{DBLP:journals/corr/abs-1708-07524}
+where $S$ is the STFT generated from the isolated speaker 1 audio signal and $N$ is the STFT generated from the mixed audio signal that included the same audio sample of speaker 1.\cite{DBLP:journals/corr/abs-1708-07524}
 
 \end{flushleft}
 
 \begin{figure}[h!]
     \centering  
-     \caption{\label{Fig:Spectrogram of isolated amd mixed audio sample from speaker 1}Spectrogram of isolated amd mixed audio sample from speaker 1}  
+     \caption{\label{fig:spec_speaker_1}Spectrogram of isolated and mixed audio sample from speaker 1}  
     \includegraphics[width=0.4\textwidth]{cIRM_same.png}  
 \end{figure}
 
 Similarly, a cIRM was generated from the audio sample of speaker 1 and the same mixed audio sample using the formula:
 
-\begin{center}
-$Y_r S_r + Y_i S_i \hspace{1.6cm} Y_r S_i - Y_i S_r$
-
-\rule[3pt]{45pt}{.4pt} \hspace{.3cm} + \hspace{.4cm} \textit{i} \hspace{.1cm} \rule[3pt]{45pt}{.4pt}
-
-
-$Y_r^2 + Y_i^2  \hspace{2.0cm} Y_r^2 + Y_i^2$
-
-\end{center}
+\[
+\dfrac{Y_r S_r + Y_i S_i}{Y_r^2 + Y_i^2} +
+i\dfrac{Y_r S_i - Y_i S_r}{Y_r^2 + Y_i^2}
+\]
 
 \begin{flushleft}
-where S is the complex STFT representation generated from the isolated speaker 1 audio signal and Y is the complex STFT generated form the mixed audio signal that included the same audio sample of speaker 1.\cite{DBLP:journals/corr/abs-1708-07524}
+where $S$ is the complex STFT representation generated from the isolated speaker 1 audio signal and $Y$ is the complex STFT generated form the mixed audio signal that included the same audio sample of speaker 1.\cite{DBLP:journals/corr/abs-1708-07524}
 \end{flushleft}
 
 \subsection{PIT and uPIT}
@@ -294,7 +281,7 @@ where S is the complex STFT representation generated from the isolated speaker 1
 
 \subsection{Masking Methods}
 
-With the NMF method, we were unable to generate a substantial separation between the original isolated signal and the mixed audio. Both IMR approaches produced substantially better results with the cIMR method proving to be the best method for this type of separation on a consistent basis [Figure 2].
+With the NMF method, we were unable to generate a substantial separation between the original isolated signal and the mixed audio. Both IMR approaches produced substantially better results with the cIMR method proving to be the best method for this type of separation on a consistent basis [Figure \ref{tab:masking_snr}].
 
 
 \begin{figure}[h!]
@@ -302,6 +289,22 @@ With the NMF method, we were unable to generate a substantial separation between
      \caption{\label{Fig:Comparison of Average SNR for Masking Methods 1}Comparison of Average SNR for Masking Methods}  
     \includegraphics[width=0.3\textwidth]{Mask_Res.png}  
 \end{figure}
+
+\begin{table}[h]
+    \centering
+    \begin{tabular}{r r r}
+        Label &Waveform & Kurtosis \\
+
+        \midrule
+        0 & s.wav & 7.29 \\
+        1 & x1.wav & 4.91 \\
+        2 & x2.wav & 3.87 \\
+        \midrule
+    \end{tabular}
+    \caption{Table Caption}
+    \label{tab:masking_snr}
+\end{table}
+
 
 
 \section{Conclusion}
