@@ -168,23 +168,17 @@ One of the biggest problems plaguing deep learning techniques in source separati
 
 PIT operates on a sequence of $N$ input frames termed a \textit{meta-frame} in order to make use of the available contextual information in the sequence. It also produces a window of frames as an output and minimizes the separation error at this meta-frame level. Since the input is shifted one (or more) frames and a new meta-frame is computed and the assignment is computed for each meta-frame, the output of PIT may produce different speaker assignments for each frame. This means that, although the label permutation problem at training time has been resolved, the output of PIT can still be improved by tracing the speaker assignments for each frame as a post-processing step.
 
-PIT results.
-
-uPIT improvements.
-
-uPIT results.
+The results of PIT are impressive and exceed 10 dB SDR improvements for the DNN and CNN approaches with optimal speaker assignment. The ideal ratio mask (IRM) results indicate the best possible improvement and are only slightly better than PIT with 12.3 dB SDR. Optimal speaker assignment means that as a post-processing step the speaker assignment from PIT is improved by tracing the speakers across meta-frames and determining the optimal speaker assignment for each frame. This improves performance because the PIT method assumes that the output-speaker does not switch across frames. Without the optimal assignment the performance of PIT degrades from a high of 10.9 dB to 5.6 - 7.8 dB.
 
 
+The authors of PIT improved their technique by proposing uPIT which is an enhancement to PIT that includes an utterance-level cost function which solves the speaker tracing problem by causing the Recurrent Neural Network (RNN) to align frames from a particular speaker to the same output stream. uPIT (like PIT) is also a much simpler model than other proposed deep learning algorithms and the trained networks have strong generalization performance to unseen data. In the original PIT algorithm the optimal permutation is computed for each meta-frame which can result in the assignment of speakers to output streams to switch during inference. With uPIT the optimal permutation is calculated across the entire utterance assuming the same assignment for all output frames. This works in practice by using recurrent neural networks such as deep LSTM (long short-term memory) RNNs and bi-directional LSTM RNNs. Since a recurrent neural network has access to data from past frames (and in a BLSTM information both the past and future frames are available) uPIT does not need to be trained on a meta-frame of $N$ stacked frames as PIT did.
+
+The results of uPIT are similar to the performance of PIT with optimal speaker tracing. Using a BLSTM and a phase sensitive mask (PSM, also referred to as a cIRM - a complex ideal ratio mask) uPIT achieves results near 11 dB SDR. The maximum performance from the ideal PSM is about 15 dB SDR (an improvement over the 12.5 dB SDR possible with a standard IRM). Based on its performance and (relative) simplicity We chose uPIT as the deep learning solution that we evaluated in our project.
 
 
 \section{Dataset Preparation}
 \subsection{CSR-I(WSJ0) Complete}
-For purposes of comparison with existing scholarship, each approach was developed based on the WSJ0 dataset, a corpus of Wall Street Journal text data organized by speakers.
-
-
-
-
-
+For purposes of comparison with existing scholarship, each approach was developed based on the WSJ0 dataset, a corpus of read Wall Street Journal text data organized by speakers.
 
 \subsection{WSJ0-mix}
 
