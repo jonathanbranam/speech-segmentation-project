@@ -154,7 +154,10 @@ The motivating application is to separate agent and customer utterances from cal
 
 \section{Literature Review}
 
-\subsection{Jamie's Lit Review}
+\subsection{Signal Approximation}
+
+There are several approaches to speech separation based on the general concept that audio can be represented as the combination of a frequency matrix and a corresponding matrix temporal activations. Approach the the task as a supervised learning problem,  can be used to create a masking 
+
 
 
 \subsection{Deep Learning Approaches}
@@ -179,7 +182,7 @@ The results of uPIT are similar to the performance of PIT with optimal speaker t
 
 \section{Dataset Preparation}
 \subsection{CSR-I (WSJ0) Complete}
-For purposes of comparison with existing scholarship, each approach was developed based on a mixture of audio extracted from the WSJ0 dataset, a corpus of read speech texts drawn from articles in the Wall Street Journal. WSJ0 \cite{garofolo:wsj0} consists of over 35,000 audio samples organized into training and evaluation data sets organized by speaker and gender. The audio files are stored in a format called Sphere using the Shorten compression algorithm. The Linguistic Data Consortium website hosts a small utility called sph2pipe \cite{ldc:sph2pipe} which we used to convert the files from the Sphere format to waveform format. We wrote a small script to automate this process and also to merge the separate disks of the WSJ0 dataset into a single folder.
+For purposes of comparison with existing scholarship, each approach was developed based on a mixture of audio extracted from the WSJ0 dataset, a corpus of read speech texts drawn from articles in the Wall Street Journal. WSJ0 \cite{garofolo:wsj0} consists of over 35,000 audio samples organized into training and evaluation data sets organized by speaker and gender. The audio files are stored in a format called Sphere using the Shorten compression algorithm. The Linguistic Data Consortium website provides a small utility called sph2pipe \cite{ldc:sph2pipe} which we used to convert the files from the Sphere format to waveform format. We wrote a small script to automate this process and also to merge the separate disks of the WSJ0 dataset into a single folder.
 
 \subsection{WSJ0-mix}
 The WSJ0-mix dataset was developed by the authors of the DPCL \cite{DBLP:journals/corr/HersheyCRW15} paper by mixing selections from the WSJ0 training set \texttt{si\_tr\_s} and mixing them together with different levels of signal-to-noise ratios (SNR) selected from 0 dB to 5dB. An additional cross validation was also generated from the training data and an evaluation set was generated with the same process but using the WSJ0 evaluation set \texttt{si\_et\_05} and development set \texttt{si\_dt\_05} which use different speakers than the training set. We found the definition of these mixtures and MATLABS scripts \cite{WSJmix} to produce the dataset from the WSJ0 data. We made some small adjustments to the scripts so that they would run in Octave, a free, open-source alternative to MATLAB, and to skip the step of generating 16 kHz outputs and the 3-speaker mixtures since we would not be using them.
@@ -209,13 +212,13 @@ Since we knew that the audio from call center is the conversation between 2 spea
 here it is the results for speaker diarization.
 \begin{figure}[h!]
     \centering  
-     \caption{\label{Fig:speaker diarization}2 speakers diarization}  
+     \caption{\label{Fig:speaker diarization 1}2 speakers diarization}  
     \includegraphics[width=0.4\textwidth]{kmeans01.png} 
 \end{figure}
 
 \begin{figure}[h!]
     \centering  
-     \caption{\label{Fig:speaker diarization}2 speakers diarization}  
+     \caption{\label{Fig:speaker diarization 2}2 speakers diarization}  
     \includegraphics[width=0.4\textwidth]{kmeans02.png}
 \end{figure}
 \subsubsection{Evaluation\cite{Segmentation}}Diarization Error Rate (DER) is used for evaluation of automatic speech recognition system.Contribution to DER comes from three factors namely, Missed speech rate (MSR), False alarm speech rate (FASR) and Speaker Error. When a speech is labeled as non-speech then that error comes under MSR. FASR is when a non- speech is detected as a speech segment. Speaker error is contributed due to speaker clustering and segmentation. This kind of error can be caused if a speaker change is not detected, oversegmentation, erroneously clustered. Sum of all three errors contribute to the DER.\\
@@ -281,29 +284,24 @@ where $S$ is the complex STFT representation generated from the isolated speaker
 
 \subsection{Masking Methods}
 
-With the NMF method, we were unable to generate a substantial separation between the original isolated signal and the mixed audio. Both IMR approaches produced substantially better results with the cIMR method proving to be the best method for this type of separation on a consistent basis [Figure \ref{tab:masking_snr}].
+With the NMF method, we were unable to generate a substantial separation between the original isolated signal and the mixed audio. Both IMR approaches produced substantially better results with the cIMR method proving to be the best method for this type of separation on a consistent basis [Figure \ref{Fig:masking_snr}].
 
 
 \begin{figure}[h!]
     \centering  
-     \caption{\label{Fig:Comparison of Average SNR for Masking Methods 1}Comparison of Average SNR for Masking Methods}  
-    \includegraphics[width=0.3\textwidth]{Mask_Res.png}  
-\end{figure}
+     \caption{\label{Fig:masking_snr}Average SNR for Masking Methods}  
 
-\begin{table}[h]
-    \centering
-    \begin{tabular}{r r r}
-        Label &Waveform & Kurtosis \\
-
+  \begin{tabular}{r r r}\\
+  
+        Method & SNR \\
         \midrule
-        0 & s.wav & 7.29 \\
-        1 & x1.wav & 4.91 \\
-        2 & x2.wav & 3.87 \\
+        NMF & 0.014 \\
+        IRM & 6.380 \\
+        cIRM & 15.070 \\
         \midrule
     \end{tabular}
-    \caption{Table Caption}
-    \label{tab:masking_snr}
-\end{table}
+    
+\end{figure}
 
 
 
