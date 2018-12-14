@@ -131,11 +131,15 @@
 % There should be no need to do such things with IEEEtran.cls V1.6 and later.
 \usepackage{listings}
 
+\DeclareMathOperator*{\argmax}{arg\ max}
+\DeclareMathOperator*{\argmin}{arg\ min}
+
 % Your document starts here!
 \begin{document}
 
 % Define document title and author
-	\title{E511-Signal Processing-Final Project}
+	\title{Monaural Single-Source Speaker Separation \\
+	{\large E511 - Signal Processing - Final Project}}
 	\author{Jonathan Branam, Jamie Israel, Jinju(Hellen) Jiang}
 	\date{December, 13 2018}
 	\maketitle
@@ -280,25 +284,32 @@ where $S$ is the complex STFT representation generated from the isolated speaker
 
 \subsection{PIT and uPIT}
 
+\begin{figure}[h]
+    \centering  
+     \caption{\label{fig:pit_diagram}PIT 2 speaker separation model}  
+    \includegraphics[width=0.4\textwidth]{PIT.png}  
+\end{figure}
+
 Utterance-level Permutation Invariant Training (uPIT) is an advancement on the Permutation Invariant Training model depicted in Figure \ref{fig:pit_diagram} where the reference signals are provided to the training model as a set rather than a list by calculating the error on all permutations of the output signals and then optimizing the model on the permutation with the lowest mean squared error (MSE). A traditional approach is to minimize the MSE between the estimated masks and the ideal masks such as in
 
 \begin{equation}
 J_m = \dfrac{1}{B} \sum_{s=1}^S || \Hat{\mathbf{M}}_S - \mathbf{M}_S ||^2_F
 \end{equation}
 
-where $B = T \times N \times S$ is the count of all time-frequency units over all sources $S$ and $F$ refers to the Frobenius norm. However, to avoid issues predicting masks in silence segments and to directly calculate the error relative to the signal reconstruction, PIT and uPIT minimize the MSE between the actual signals by applying the mask to the original spectra and then calculating the error. For PIT using the PSM with complex values the cost function is
+where $B = T \times N \times S$ is the count of all time-frequency units over all sources $S$ and $F$ refers to the Frobenius norm. However, to avoid issues predicting masks in silence segments and to directly calculate the error relative to the signal reconstruction, PIT and uPIT minimize the MSE between the actual signals by applying the mask to the original spectra and then calculating the error. For PIT using PSM with complex values the cost function is
 
 \begin{equation}
-J_{psm} = \dfrac{1}{B} \sum_{s=1}^S || \Hat{\mathbf{M}}_S \odot \mathbf{R} - \mathbf{A}_S \odot \cos(\theta_y - \theta_s) ||^2_F  
+J_{\phi^*} = \dfrac{1}{B} \sum_{s=1}^S || \Hat{\mathbf{M}}_s \odot \mathbf{R} - 
+\mathbf{A}_{\phi^*(s)} \odot \cos(\theta_y - \theta_{\phi^*(s)}) ||^2_F  
 \end{equation}
 
-\begin{figure}[h!]
-    \centering  
-     \caption{\label{fig:pit_diagram}PIT 2 speaker separation model}  
-    \includegraphics[width=0.4\textwidth]{PIT.png}  
-\end{figure}
+where $\phi^*$ is the permutation with the lowest MSE:
+\begin{equation}
+\phi^* = \argmin_{\phi \in \mathcal{P}} \dfrac{1}{B} \sum_{s=1}^S || \Hat{\mathbf{M}}_s \odot \mathbf{R} - 
+\mathbf{A}_{\phi(s)} \odot \cos(\theta_y - \theta_{\phi(s)}) ||^2_F  
+\end{equation}
 
-
+The major difference in uPIT is instead of calculating the permutation error for every meta-frame uPIT calculates the error \textit{across the entire utterance}. uPIT relies on using recurrent neural networks (RNNs) to provide the context necessary for good separation and for selecting the best permutation across the entire utterance. The cost function for uPIT is the same as for PIT but is calculated for the entire utterance rather than for each meta-frame.
 
 \section{Results}
 
@@ -322,6 +333,11 @@ With the NMF method, we were unable to generate a substantial separation between
     \end{tabular}
     
 \end{figure}
+
+\subsection{uPIT}
+
+Our implementation of uPIT uses a BLSTM with 3 hidden layers of size 896. We used the Adam optimizer and set a $0.5$ rate for dropout. We trained using Google Colab free instances which allow using a Tesla K80 GPU with 12 Gb or RAM. We found that training with 1,000 samples for 60 epochs took about 5 hours in this setup. The Google Colab GPU will disconnect after 12 hours so we were unable to complete a full training run. We experimented with saving off the model parameters and restarting the training once the 12 hours had expired but were unable to complete the implementation with enough time to train again.
+
 
 
 
