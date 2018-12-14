@@ -160,11 +160,12 @@ The motivating application is to separate agent and customer utterances from cal
 
 \subsection{Signal Approximation}
 
-There are several approaches to signal separation (e.g., denoising, diarization) based on the general concept that audio can be represented as the combination of a frequency matrix and a corresponding matrix temporal activations. As a supervised learning problem, a time-frequency  representation can be used to emphasize the points at which a target signal dominates the mixed audio and deemphasize the points where an alternate speaker (or other noise source) predominates.\cite{DBLP:journals/corr/abs-1708-07524}\\
+There are several approaches to signal separation (e.g., denoising, diarization) based on the general concept that audio can be represented as the combination of a frequency matrix and a corresponding matrix temporal activations. As a supervised learning problem, a time-frequency  representation can be used to emphasize the points at which a target signal dominates the mixed audio and deemphasize the points where an alternate speaker (or other noise source) predominates.\cite{DBLP:journals/corr/abs-1708-07524}
 
-Masking functions range from the Ideal Binary Mask (IBM), in which a masking matrix is used to turn certain frequencies on or off at given moments based on a binary (0/1) assessment of the dominant source at the given time and frequency.\cite{DBLP:journals/corr/abs-1708-07524} IRM provides a more nuanced approach by representing the relative dominance of each source at a given time and frequency as a ratio of the source signals rather than a binary mask.\cite{DBLP:journals/corr/abs-1708-07524}
+Masking functions range from the Ideal Binary Mask (IBM), in which a masking matrix is used to turn certain frequencies on or off at given moments based on a binary (0/1) assessment of the dominant source at the given time and frequency.\cite{DBLP:journals/corr/abs-1708-07524} IRM provides a more nuanced approach by representing the relative dominance of each source at a given time and frequency as a ratio of the source signals rather than a binary mask. And, cIRM is an Ideal Ratio Mask calculated in the complex domain, which allows for a full reconstruction of the audio signal. \cite{DBLP:journals/corr/abs-1708-07524} 
 
-
+Each of the aforementioned masking models relies on a global representation of the frequency spectrum associated with a given audio sample.  More recently, probabilistic approaches have been used to represent the signal as a collection of frequency spectrum (hidden states) over time. On such approach, Nonnegative Hidden Markov Model (N-HMM), models a magnitude spectrogram for each latent component (source) at a given time frame as one of many states; like a traditional HMM, movement between states - and the spectral representation governing each latent component - is learned and defined by a transition matrix. 
+\cite{10.1007/978-3-642-15995-4_18}
 
 \subsection{Deep Learning Approaches}
 
@@ -215,7 +216,7 @@ In this project, we used 3 approaches to extract features:
 \subsubsection{Speaker segmentation}\cite{Segmentation} Speaker segmentation which is also known as acoustic change detection aims to detect speaker change such that each contiguous segment corresponds to single speaker only. To find if the two segments correspond to same speaker we have to define some notion of distance metric. In this case, I skipped this step and used the features extrated from above steps as input for kmeans clustering.
 \subsubsection{Kmeans Clustering}
 Since we knew that the audio from call center is the conversation between 2 speakers(customer service and customer), we set k=2 for kmeans clustering.\\
-The results for kmeans speaker diarization are shown in \ref{Fig:speaker diarization 1} and \ref{Fig:speaker diarization 2}.
+The results for kmeans speaker diarization are shown in Figure\ref{Fig:speaker diarization 1} and Figure \ref{Fig:speaker diarization 2}.
 \begin{figure}[h!]
     \centering  
      \caption{\label{Fig:speaker diarization 1}2 speakers diarization}  
@@ -227,8 +228,16 @@ The results for kmeans speaker diarization are shown in \ref{Fig:speaker diariza
      \caption{\label{Fig:speaker diarization 2}2 speakers diarization}  
     \includegraphics[width=0.4\textwidth]{kmeans02.png}
 \end{figure}
-\subsubsection{Evaluation\cite{Segmentation}}Diarization Error Rate (DER) is used for evaluation of automatic speech recognition system.Contribution to DER comes from three factors namely, Missed speech rate (MSR), False alarm speech rate (FASR) and Speaker Error. When a speech is labeled as non-speech then that error comes under MSR. FASR is when a non- speech is detected as a speech segment. Speaker error is contributed due to speaker clustering and segmentation. This kind of error can be caused if a speaker change is not detected, oversegmentation, erroneously clustered. Sum of all three errors contribute to the DER.\\
-In this case, we don't have any labeled data to calculate the training error, we just simply used human ears to justify whether the diarization was good or not. For some training data, it works well, but some training data, it performed really bad. 
+\subsubsection{Evaluation\cite{Segmentation}}The common metric to measure how good/bad for speaker diarization experiments is the Diarization Error Rate(DER), it contains 3 main parts:
+\begin{itemize}
+    \item The first one is called Missed Speech Rate(MSR), whichi is percentage of scored time that a hypothesized non-speech segment corresponds to a reference speaker segment.
+    \item The second one is False alarm speech rate (FASR), which is percentage of scored time that a hypothesized speaker is labelled as a non-speech in the reference.
+    \item The third one is Speaker error rate(SER), which is percentage of scored time that a speaker ID is assigned to the wrong speaker.
+    \item The last one is Overlap speaker rate(OSR), which is percentage of scored time that some of the multiple speakers in a segment do not get assigned to any speaker.
+\end{itemize}
+
+So the Diarization Error Rate(DER) can be calculated as the sum of the above 4 rates(MSR+FASR+SER+OSR)\\
+In this case, we don't have any labeled data to identify which segmentation is speaker 1/2 to calculate the training error, we just simply used human ears to justify whether the diarization was good or not. For some training data, it works well, but some training data, it performed really bad. 
 
 \subsection{NMF, IRM and cIRM}
 Nonnegative matrix factorization (NMF) is used to represent high-dimensional data as the product of two matrices (typically referenced as $W$ and $H$). In the case of an audio signal, these matrices can be viewed as a representation of the signal's frequency spectrum ($W$) and the corresponding activations ($H$).
@@ -343,7 +352,8 @@ Our results with uPIT were not very good, probably due to the small training siz
 
 
 \section{Conclusion}
-...
+We got our best results from the cIRM with NMF separation. uPIT needed more training time and Kmeans...
+
 \newline 
 % Now we need a bibliography:
 
