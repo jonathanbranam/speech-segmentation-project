@@ -230,18 +230,20 @@ In this case, we don't have any labeled data to calculate the training error, we
 Nonnegative matrix factorization (NMF) is used to represent high-dimensional data as the product of two matrices (typically referenced as $W$ and $H$). In the case of an audio signal, these matrices can be viewed as a representation of the signal's frequency spectrum ($W$) and the corresponding activations ($H$).
 
 To perform NMF, we transformed isolated audio samples of two speakers (speaker 1 and speaker 2) to a frequency-time representation using short-time Fourier transform (STFT) before decomposing each signal using the following iterative update rules:
-\newline
 
-$W = W \bigodot \frac{\frac{X}{WH}H^T}{1{FxT}H^T}$ \hspace{1cm} $H = H \bigodot \frac{W^T\frac{X}{WH}}{W^T1^{FxT}}$
-\newline
+\begin{equation}
+\begin{array}{ll}
+W = W \bigodot \frac{\frac{X}{WH}H^T}{1{FxT}H^T} &
+H = H \bigodot \frac{W^T\frac{X}{WH}}{W^T1^{FxT}}
+\end{array}
+\end{equation}
 
 Using the frequency matrices associated with the sample from each speaker, a new set of activations ($W$) was generated from the mixed signal composed of both individual samples. A magnitude masking matrix, reflecting the magnitudes associated with the frequency representation for each speaker at each time frame, was generated using this new set of activations and the following formula:
 
-
-\[
+\begin{equation}
 \dfrac{W_{S1}H_{(1:30,:)}}
 {W_{S1}H_{(1:30,:)}+W_{S2}H_{(31:60,:)}}
-\]
+\end{equation}
 
 \begin{flushleft}
 where S1 is the basis vector associated with the speaker 1 audio sample, S2 is the basis vector associated with the speaker 2 audio sample and H is the activation matrix generated from the combined speaker 1 and speaker 2 basis vectors.\cite{ClassNMF}
@@ -249,9 +251,9 @@ where S1 is the basis vector associated with the speaker 1 audio sample, S2 is t
 
 Using the STFT of a single speaker audio sample (speaker 1) and the STFT of the mixed audio sample that included speaker 1 (Figure \ref{fig:spec_speaker_1}), an IRM was generated based on the formula:
 
-\[
+\begin{equation}
 \dfrac{S_{(t,f)}^2}{S_{(t,f)}^2 + N_{(t,f)}^2}
-\]
+\end{equation}
 
 \begin{flushleft}
 
@@ -267,17 +269,28 @@ where $S$ is the STFT generated from the isolated speaker 1 audio signal and $N$
 
 Similarly, a cIRM was generated from the audio sample of speaker 1 and the same mixed audio sample using the formula:
 
-\[
+\begin{equation}
 \dfrac{Y_r S_r + Y_i S_i}{Y_r^2 + Y_i^2} +
 i\dfrac{Y_r S_i - Y_i S_r}{Y_r^2 + Y_i^2}
-\]
+\end{equation}
 
 \begin{flushleft}
 where $S$ is the complex STFT representation generated from the isolated speaker 1 audio signal and $Y$ is the complex STFT generated form the mixed audio signal that included the same audio sample of speaker 1.\cite{DBLP:journals/corr/abs-1708-07524}
 \end{flushleft}
 
-\subsection{uPIT}
+\subsection{PIT and uPIT}
 
+Utterance-level Permutation Invariant Training (uPIT) is an advancement on the Permutation Invariant Training model depicted in Figure \ref{fig:pit_diagram} where the reference signals are provided to the training model as a set rather than a list by calculating the error on all permutations of the output signals and then optimizing the model on the permutation with the lowest mean squared error (MSE). A traditional approach is to minimize the MSE between the estimated masks and the ideal masks such as in
+
+\begin{equation}
+J_m = \dfrac{1}{B} \sum_{s=1}^S || \Hat{\mathbf{M}}_S - \mathbf{M}_S ||^2_F
+\end{equation}
+
+where $B = T \times N \times S$ is the count of all time-frequency units over all sources $S$ and $F$ refers to the Frobenius norm. However, to avoid issues predicting masks in silence segments and to directly calculate the error relative to the signal reconstruction, PIT and uPIT minimize the MSE between the actual signals by applying the mask to the original spectra and then calculating the error. For PIT using the PSM with complex values the cost function is
+
+\begin{equation}
+J_{psm} = \dfrac{1}{B} \sum_{s=1}^S || \Hat{\mathbf{M}}_S \odot \mathbf{R} - \mathbf{A}_S \odot \cos(\theta_y - \theta_s) ||^2_F  
+\end{equation}
 
 \begin{figure}[h!]
     \centering  
