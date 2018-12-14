@@ -160,9 +160,9 @@ The motivating application is to separate agent and customer utterances from cal
 
 \subsection{Signal Approximation}
 
-There are several approaches to signal separation (e.g., denoising, diarization) based on the general concept that audio can be represented as the combination of a frequency matrix and a corresponding matrix temporal activations. As a supervised learning problem, a time-frequency  representation can be used to emphasize the points at which a target signal dominates the mixed audio and deemphasize the points where an alternate speaker (or other noise source) predominates.[\cite{}]\\
+There are several approaches to signal separation (e.g., denoising, diarization) based on the general concept that audio can be represented as the combination of a frequency matrix and a corresponding matrix temporal activations. As a supervised learning problem, a time-frequency  representation can be used to emphasize the points at which a target signal dominates the mixed audio and deemphasize the points where an alternate speaker (or other noise source) predominates.\cite{DBLP:journals/corr/abs-1708-07524}\\
 
-Masking functions range from the Ideal Binary Mask (IBM), in which a masking matrix is used to turn certain frequencies on or off at given moments based on a binary (0/1) assessment of the dominant source at the given time and frequency.[\cite{}] IRM provides a more nuanced approach by representing the relative dominance of each source at a given time and frequency as a ratio of the source signals rather than a binary mask.{\cite{}}
+Masking functions range from the Ideal Binary Mask (IBM), in which a masking matrix is used to turn certain frequencies on or off at given moments based on a binary (0/1) assessment of the dominant source at the given time and frequency.\cite{DBLP:journals/corr/abs-1708-07524} IRM provides a more nuanced approach by representing the relative dominance of each source at a given time and frequency as a ratio of the source signals rather than a binary mask.\cite{DBLP:journals/corr/abs-1708-07524}
 
 
 
@@ -215,7 +215,7 @@ In this project, we used 3 approaches to extract features:
 \subsubsection{Speaker segmentation}\cite{Segmentation} Speaker segmentation which is also known as acoustic change detection aims to detect speaker change such that each contiguous segment corresponds to single speaker only. To find if the two segments correspond to same speaker we have to define some notion of distance metric. In this case, I skipped this step and used the features extrated from above steps as input for kmeans clustering.
 \subsubsection{Kmeans Clustering}
 Since we knew that the audio from call center is the conversation between 2 speakers(customer service and customer), we set k=2 for kmeans clustering.\\
-here it is the results for speaker diarization.
+The results for kmeans speaker diarization are shown in \ref{Fig:speaker diarization 1} and \ref{Fig:speaker diarization 2}.
 \begin{figure}[h!]
     \centering  
      \caption{\label{Fig:speaker diarization 1}2 speakers diarization}  
@@ -338,6 +338,7 @@ With the NMF method, we were unable to generate a substantial separation between
 
 Our implementation of uPIT uses a BLSTM with 3 hidden layers of size 896. We used the Adam optimizer and set a $0.5$ rate for dropout. We trained using Google Colab free instances which allow using a Tesla K80 GPU with 12 Gb or RAM. We found that training with 1,000 samples for 60 epochs took about 5 hours in this setup. The Google Colab GPU will disconnect after 12 hours so we were unable to complete a full training run. We experimented with saving off the model parameters and restarting the training once the 12 hours had expired but were unable to complete the implementation with enough time to train again.
 
+Our results with uPIT were not very good, probably due to the small training size that we used. We were able to find two open source implementations of uPIT one of them we used as a reference only [CITE 1] and the other [CITE 2] we were able to actually implement in order to verify our results. The author was able to achieve results comparable to those published in the uPIT paper and he agreed that we should not expect to match the paper's performance unless we are able to train on the full dataset.
 
 
 
