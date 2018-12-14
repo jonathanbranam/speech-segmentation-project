@@ -209,11 +209,11 @@ The technique of speaker diarization relies on a big pipeline with following ste
 \subsubsection{Feature Extraction}
 In this project, we used 3 approaches to extract features:
 \begin{itemize}
-    \item A chroma vector (Wikipedia) (FMP, p. 123) is a typically a 12-element feature vector indicating how much energy of each pitch class, {C, C\#, D, D\#, E, ..., B}, is present in the signal. Then use mean of each element as one of input for clustering.
-    \item The mel frequency cepstral coefficients (MFCCs) of a signal are a small set of features  which concisely describe the overall shape of a spectral envelope. In this case, mfcc computed 13 MFCCs.The very first MFCC, the 0th coefficient, does not convey information relevant to the overall shape of the spectrum. It only conveys a constant offset, i.e. adding a constant value to the entire spectrum. Therefore, here I discard the first MFCC, then I scale the MFCCs such that each coefficient dimension has zero mean and unit variance.Then use mean of MFCCS as one part of input for clustering.
+    \item A chroma vector (Wikipedia) that consists of 12 feature vectors indicating how much energy of each pitch class,In the signal we used the same notation as used i Western music notation, to present every pitch class. Then use mean of each element as one of input for clustering.
+    \item MFCCs[Wikipedia] are commonly used as features in speech recognition systems, such as the systems which can automatically recognize numbers spoken into a telephone. In this experiment, mfcc computed 13 MFCCs.The first MFCC does not represent information related to the overall shape of the spectrum. It only contains a constant offset. Therefore, here I discard the first MFCC, then I scale the MFCCs such that each coefficient dimension has zero mean and unit variance.Then use mean of MFCCs as one part of input for clustering.
     \item We divide the audio signal into smaller frames. In smaller time scales audio signals are statistically unchanged. Then for each smaller frames we compute the power spectrum of the signal, and use it as the third part of input for clustering.
 \end{itemize}
-\subsubsection{Speaker segmentation}\cite{Segmentation} Speaker segmentation which is also known as acoustic change detection aims to detect speaker change such that each contiguous segment corresponds to single speaker only. To find if the two segments correspond to same speaker we have to define some notion of distance metric. In this case, I skipped this step and used the features extrated from above steps as input for kmeans clustering.
+\subsubsection{Speaker segmentation}\cite{Segmentation} Speaker segmentation is to split an audio stream into smaller segments, so as every segment ideally contains only one speaker. So the key point for speech segment is to find out the change point where speakers changed at that point. For example, in our training data, we have conversation between customer service(speaker 0) and customer(speak 1), so we need to find out each change point speaker 0 to speaker 1 or vice versa. In this case, I skipped this step and used the features extracted from above steps as input for kmeans clustering.
 \subsubsection{Kmeans Clustering}
 Since we knew that the audio from call center is the conversation between 2 speakers(customer service and customer), we set k=2 for kmeans clustering.\\
 The results for kmeans speaker diarization are shown in Figure\ref{Fig:speaker diarization 1} and Figure \ref{Fig:speaker diarization 2}.
@@ -335,7 +335,7 @@ With the NMF method, we were unable to generate a substantial separation between
   
         Method & SNR \\
         \midrule
-        NMF & 0.014 \\
+        NMF & 1.924 \\
         IRM & 6.380 \\
         cIRM & 15.070 \\
         \midrule
@@ -354,7 +354,6 @@ Our results with uPIT were not very good, probably due to the small training siz
 \section{Conclusion}
 We got our best results from the cIRM with NMF separation. uPIT needed more training time and Kmeans...
 
-\newline 
 % Now we need a bibliography:
 
 \bibliographystyle{plain} % We choose the "plain" reference style
