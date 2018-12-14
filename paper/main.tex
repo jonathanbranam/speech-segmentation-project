@@ -148,7 +148,7 @@ In this project we evaluated and implemented state of the art techniques to solv
 
 % Each section begins with a \section{title} command
 \section{Introduction}
-There have been several recent developments in the use of deep learning to perform speaker diarization, or separation of multiple speech signals from a single source into separate homogeneous signals representing each individual speaker. This task is particularly challenging where the input is monophonic, there is no control over environmental conditions, the number of speakers is unknown and there are no samples of the speakers from which to train. Using the CSR-I(WSJ0) Complete dataset\cite{garofolo:wsj0}, we tested several algorithms for accomplishing monaural speech separation including classification (KMeans), various masking approaches (NMF, Ideal Ratio Mask[IRM], and complex Ideal Ratio Mask [cIRM]), and permutation-based deep learning approaches (Permutation Invariant Training [PIT] and utterance-level Permutation Invariant Training [uPIT]).
+There have been several recent developments in the use of deep learning to perform speaker diarization, or separation of multiple speech signals from a single source into separate homogeneous signals representing each individual speaker. This task is particularly challenging where the input is monophonic, there is no control over environmental conditions, the number of speakers is unknown and there are no samples of the speakers from which to train. Using the CSR-I(WSJ0) Complete dataset\cite{garofolo:wsj0}, we tested several algorithms for accomplishing monaural speech separation including classification (KMeans), various masking approaches (Nonnegative Matrix Factorization [NMF], Ideal Ratio Mask[IRM], and complex Ideal Ratio Mask [cIRM]), and permutation-based deep learning approaches (Permutation Invariant Training [PIT] and utterance-level Permutation Invariant Training [uPIT]).
 
 The motivating application is to separate agent and customer utterances from call center recordings, which involve short duration speech with occasional cross talk and at least one unknown speaker.
 
@@ -156,7 +156,9 @@ The motivating application is to separate agent and customer utterances from cal
 
 \subsection{Signal Approximation}
 
-There are several approaches to speech separation based on the general concept that audio can be represented as the combination of a frequency matrix and a corresponding matrix temporal activations. Approach the the task as a supervised learning problem,  can be used to create a masking 
+There are several approaches to signal separation (e.g., denoising, diarization) based on the general concept that audio can be represented as the combination of a frequency matrix and a corresponding matrix temporal activations. As a supervised learning problem, a time-frequency  representation can be used to emphasize the points at which a target signal dominates the mixed audio and deemphasize the points where an alternate speaker (or other noise source) predominates.[\cite{}]\\
+
+Masking functions range from the Ideal Binary Mask (IBM), in which a masking matrix is used to turn certain frequencies on or off at given moments based on a binary (0/1) assessment of the dominant source at the given time and frequency.[\cite{}] IRM provides a more nuanced approach by representing the relative dominance of each source at a given time and frequency as a ratio of the source signals rather than a binary mask.{\cite{}}
 
 
 
@@ -274,10 +276,15 @@ i\dfrac{Y_r S_i - Y_i S_r}{Y_r^2 + Y_i^2}
 where $S$ is the complex STFT representation generated from the isolated speaker 1 audio signal and $Y$ is the complex STFT generated form the mixed audio signal that included the same audio sample of speaker 1.\cite{DBLP:journals/corr/abs-1708-07524}
 \end{flushleft}
 
-\subsection{PIT and uPIT}
+\subsection{uPIT}
 
-..
-.... Add text here....
+
+\begin{figure}[h!]
+    \centering  
+     \caption{\label{fig:pit_diagram}PIT 2 speaker separation model}  
+    \includegraphics[width=0.4\textwidth]{PIT.png}  
+\end{figure}
+
 
 
 \section{Results}
