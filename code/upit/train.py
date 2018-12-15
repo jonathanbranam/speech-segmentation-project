@@ -16,6 +16,11 @@ Options:
     --src2-dir SRC2-DIR                 # directory beneath root with source 2 [default: s2]
     --train-file-list TRAIN-FL          # file that contains training set [default: train.txt]
     --valid-file-list VAL-FL            # file that contains validation set [default: validation.txt]
+    --output-dir OUTPUT-DIR             # output directory [default: out]
+    --save-every SAVE-EVERY             # save model every N epochs [default: 10]
+    --init-model INIT-MODEL             # load initial model parameters
+    --start-epoch START-EPOCH           # count of initial epoch for continued
+                                        #   training session [default: 1]
                                         #
     --num-speakers NUM-SPEAKERS         # number of speakers [default: 2]
     --epochs EPOCHS                     # number of epochs [default: 10]
@@ -38,6 +43,15 @@ Options:
 
 Examples:
     ./train.py -d --epochs 2
+    ./train.py -d --debug-level 3 --epochs 2  --batch-size 2
+
+    # Run for 10 epochs
+    ./train.py --epochs 10
+
+    # Load previous model file and continue training
+    ./train.py --epochs 10
+    ./train.py --epochs 10 --start-epoch 11 --init-model out/model.10.pkl
+    ./train.py --epochs 10 --start-epoch 21 --init-model out/model.20.pkl
 """
 
 from docopt import docopt
@@ -45,11 +59,13 @@ from docopt import docopt
 from itertools import permutations
 import time
 
+from pathlib import Path
+
 import librosa
 
-import torch as th
 import numpy as np
 
+import torch as th
 from torch.optim.lr_scheduler import ReduceLROnPlateau
 from torch.nn.utils.rnn import pack_sequence, pad_sequence
 from torch.nn.utils.rnn import PackedSequence, pad_packed_sequence
@@ -132,6 +148,7 @@ class TrainUpit(object):
                 f"Window: {self.window}")
 
         self.epochs = int(args['--epochs'])
+        self.start_epoch = int(args['--start-epoch'])
         self.num_layers = int(args['--num-layers'])
         self.layer_size = int(args['--layer-size'])
         self.batch_size = int(args['--batch-size'])
@@ -186,38 +203,11 @@ class TrainUpit(object):
             batch_set = sorted([valid_data[i] for i in batch_indices],
                     key=lambda x: x[0].shape[0],
                     reverse=True)
-            dprint(f"Batch indices: {batch_indices}", level=2)
+            dprint(f"Batch indices: {batch_indices}", level=3)
 
-            input_sizes = th.tensor([mix.shape[0] for (mix, _) in batch_set],
-                    dtype=th.float32)
-            model_input = pack_sequence([
-                th.tensor(np.abs(mix), dtype=th.float32)
-                for (mix, _) in batch_set])
-
-            mix_spec = pad_sequence([
-                th.tensor(np.abs(mix), dtype=th.float32)
-                for (mix, _) in batch_set], batch_first=True)
-
-            mix_phase = pad_sequence([
-                th.tensor(np.angle(mix), dtype=th.float32)
-                for (mix, _) in batch_set], batch_first=True)
-
-            sources_spec = []
-            for i in range(self.num_s):
-                source_Ns_spec = pad_sequence([
-                    th.tensor(np.abs(sources[i]), dtype=th.float32)
-                    for (_, sources) in batch_set], batch_first=True)
-                sources_spec.append(source_Ns_spec)
-
-            sources_phase = []
-            for i in range(self.num_s):
-                source_Ns_phase = pad_sequence([
-                    th.tensor(np.abs(sources[i]), dtype=th.float32)
-                    for (_, sources) in batch_set], batch_first=True)
-                sources_phase.append(source_Ns_phase)
-
-            model_input = (model_input.cuda() if th.cuda.is_available() else
-                    model_input.to(DEVICE))
+            (input_sizes, model_input,
+                mix_spec, mix_phase,
+                sources_spec, sources_phase) = self.process_batch_set(batch_set)
 
             dprint(f"  input_sizes: {input_sizes.size()}", level=3)
             dprint(f"  model_input: {type(model_input)}", level=3)
@@ -237,6 +227,44 @@ class TrainUpit(object):
         # return the average loss?
         return total_loss / batch_count
 
+    def process_batch_set(self, batch_set):
+        input_sizes = th.tensor([mix.shape[0] for (mix, _) in batch_set],
+                dtype=th.float32)
+        model_input = pack_sequence([
+            th.tensor(np.abs(mix), dtype=th.float32)
+            for (mix, _) in batch_set])
+
+        model_input = (model_input.cuda() if th.cuda.is_available() else
+                model_input.to(DEVICE))
+
+
+        mix_spec = pad_sequence([
+            th.tensor(np.abs(mix), dtype=th.float32)
+            for (mix, _) in batch_set], batch_first=True)
+
+        mix_phase = pad_sequence([
+            th.tensor(np.angle(mix), dtype=th.float32)
+            for (mix, _) in batch_set], batch_first=True)
+
+        sources_spec = []
+        for i in range(self.num_s):
+            source_Ns_spec = pad_sequence([
+                th.tensor(np.abs(sources[i]), dtype=th.float32)
+                for (_, sources) in batch_set], batch_first=True)
+            sources_spec.append(source_Ns_spec)
+
+        sources_phase = []
+        for i in range(self.num_s):
+            source_Ns_phase = pad_sequence([
+                th.tensor(np.abs(sources[i]), dtype=th.float32)
+                for (_, sources) in batch_set], batch_first=True)
+            sources_phase.append(source_Ns_phase)
+
+        return (input_sizes, model_input,
+                mix_spec, mix_phase,
+                sources_spec, sources_phase)
+
+
     def train(self, train_data):
         self.model.train()
         total_loss = 0
@@ -248,68 +276,20 @@ class TrainUpit(object):
         for batch_i in range(0, n, self.batch_size):
             batch_count += 1
             batch_indices = indices[batch_i:batch_i+self.batch_size]
-            # Sort longest first to be able to pack
+            # Sort longest first (required for pack)
             # train_data returns (mix_spec, [src1_spec, src2_spec])
             batch_set = sorted([train_data[i] for i in batch_indices],
                     key=lambda x: x[0].shape[0],
                     reverse=True)
-            dprint(f"Batch indices: {batch_indices}", level=2)
+            dprint(f"Batch indices: {batch_indices}", level=3)
             if DEBUG_LEVEL >= 3:
                 for i, (mix, sources) in enumerate(batch_set):
-                    dprint(f"  {i:2d} Mix: {mix.shape}, sources: {[s.shape for s in sources]}", level=3)
+                    dprint(f"  {i:2d} Mix: {mix.shape}, "
+                            f"sources: {[s.shape for s in sources]}", level=3)
 
-            # DataLoader._transform called on dataset output one at a time
-            #   (mix_spec, [src1_spec, src2_spec])
-            # And it returns:
-            #   num_frames: mix_spec.shape[0]
-            #   feature: th.tensor(np.abs(mix_spec), dtype=th.float32)
-            #   source_attr:
-            #       spectrogram: th.tensor(np.abs(mix_spec), dtype=th.float32)
-            #       phase: th.tensor(np.angle(mix_spec), dtype=th.float32)
-            #   target_attr:
-            #       spectrogram: [th.tensor(np.abs(mix_spec), dtype=th.float32),
-            #           ...]
-            #       phase: [th.tensor(np.angle(mix_spec), dtype=th.float32),
-            #           ...]
-
-            input_sizes = th.tensor([mix.shape[0] for (mix, _) in batch_set],
-                    dtype=th.float32)
-            model_input = pack_sequence([
-                th.tensor(np.abs(mix), dtype=th.float32)
-                for (mix, _) in batch_set])
-
-            mix_spec = pad_sequence([
-                th.tensor(np.abs(mix), dtype=th.float32)
-                for (mix, _) in batch_set], batch_first=True)
-
-            mix_phase = pad_sequence([
-                th.tensor(np.angle(mix), dtype=th.float32)
-                for (mix, _) in batch_set], batch_first=True)
-
-            sources_spec = []
-            for i in range(self.num_s):
-                source_Ns_spec = pad_sequence([
-                    th.tensor(np.abs(sources[i]), dtype=th.float32)
-                    for (_, sources) in batch_set], batch_first=True)
-                sources_spec.append(source_Ns_spec)
-
-            sources_phase = []
-            for i in range(self.num_s):
-                source_Ns_phase = pad_sequence([
-                    th.tensor(np.abs(sources[i]), dtype=th.float32)
-                    for (_, sources) in batch_set], batch_first=True)
-                sources_phase.append(source_Ns_phase)
-
-            # This was wrong: it should be a pad_sequence across the sources,
-            # not a pad_sequence per source.
-            #sources_spec = [pad_sequence([
-                #th.tensor(np.abs(source), dtype=th.float32)
-                #for source in sources], batch_first=True)
-                #for (_, sources) in batch_set]
-            #sources_phase = [pad_sequence([
-                #th.tensor(np.angle(source), dtype=th.float32)
-                #for source in sources], batch_first=True)
-                #for (_, sources) in batch_set]
+            (input_sizes, model_input,
+                mix_spec, mix_phase,
+                sources_spec, sources_phase) = self.process_batch_set(batch_set)
 
             if DEBUG_LEVEL >= 3:
                 for i, src in enumerate(sources_spec):
@@ -318,30 +298,6 @@ class TrainUpit(object):
                     dprint(f" source_phase {i:3d}: {src.size()}", level=3)
             dprint(f"sources_spec {len(sources_spec)}", level=3)
             dprint(f"sources_phase {len(sources_phase)}", level=3)
-
-            # DataLoader._process(batch)
-            #   * calls _transform to get a list of dicts
-            #   * sorts by reverse num_frames (longest first...)
-            # Returns:
-            #   input_sizes: th.tensor([num_frames in batch], dtype=th.float32)
-            #   input_feats: pack_squence([feature in batch])
-            #   source_attr:
-            #       spectrogram: pad_sequence([spectrogram in batch],
-            #           batch_first=True)
-            #       phase: pad_sequence([phase in batch],
-            #           batch_first=True)
-            #   target_attr:
-            #       spectrogram: [pad_sequence([spectrogram in target],
-            #           batch_first=True), ...]
-            #       phase: [pad_sequence([phase in target],
-            #           batch_first=True), ...]
-
-
-            # get the input
-            # model_input = packed_sequence_cuda(model_input) if isinstance(
-                # model_input, PackedSequence) else model_input.to(device)
-            model_input = (model_input.cuda() if th.cuda.is_available() else
-                    model_input.to(DEVICE))
 
             self.optimizer.zero_grad()
 
@@ -420,6 +376,19 @@ class TrainUpit(object):
         # DataLoader implements __iter__(self) and yields the data in batches
         # load cv data
 
+        dprint(f"Beginning training on {DEVICE}...")
+
+        init_model_file = args.get('--init-model', None)
+        if init_model_file is not None:
+            dprint(f"Loading initial model params from {init_model_file}")
+            loc = None if th.cuda.is_available() else "cpu"
+            self.model.load_state_dict(
+                th.load(init_model_file, map_location=loc))
+
+        self.out_dir = Path(args['--output-dir'])
+        self.out_dir.mkdir(parents=True, exist_ok=True)
+        self.save_every = int(args['--save-every'])
+
         train_filelist = args['--train-file-list']
         valid_filelist = args['--valid-file-list']
         train_root = Path(args['--train-root-dir'])
@@ -453,26 +422,32 @@ class TrainUpit(object):
                     hop_size=self.hop_size, window=self.window),
             ])
 
-        for epoch in range(self.epochs):
+        for epoch in range(self.start_epoch, self.start_epoch+self.epochs):
             dprint(f"Epoch {epoch:3d}.")
+
             dprint("  Begin training...")
             train_start = time.time()
             train_loss = self.train(train_data)
-            # do some validation
+
             dprint("  Validation...")
             val_start = time.time()
             val_loss = self.validate(valid_data)
             val_end = time.time()
+
+            # step the lr scheduler based on validation loss
             self.sched.step(val_loss)
 
             dprint(f"  training loss: {train_loss:.4f}"
-                    f"({val_start-train_start}s) val loss: {val_loss:.4f} "
-                    f"{val_end-val_start}s")
+                    f"({val_start-train_start:.1f}s) val loss: {val_loss:.4f} "
+                    f"({val_end-val_start:.1f}s)")
 
             # Save out the model params sometimes
+            if (epoch % self.save_every == 0
+                    or epoch+1 == self.start_epoch + self.epochs):
+                save_path = self.out_dir / f"model.{epoch:02d}.pkl"
+                dprint(f"Saving model to {save_path}")
+                th.save(self.model.state_dict(), save_path)
 
-
-from pathlib import Path
 
 class WavLoader(object):
     """Load waves from disk applying the given transform
@@ -499,7 +474,7 @@ class WavLoader(object):
 
     def _load(self, filename):
         full_fn = self.rootdir / filename.strip()
-        dprint(f"WavLoader loading {full_fn}.")
+        dprint(f"WavLoader loading {full_fn}.", level=3)
         wav, _ = librosa.load(str(full_fn), sr=None)
         if self.transform_fn is not None:
             return self.transform_fn(wav, **self.tx_kwargs)
@@ -560,6 +535,7 @@ def main(args):
     # Bad design, but easy: read directly from args
     trainer = TrainUpit(args)
     trainer.run(args)
+    dprint("Training Complete")
 
 
 defaults = {
