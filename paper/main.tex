@@ -139,20 +139,20 @@
 
 % Define document title and author
 	\title{Monaural Single-Source Speaker Separation \\
-	{\large E511 - Signal Processing - Final Project}}
-	\author{Jonathan Branam, Jamie Israel, Jinju(Hellen) Jiang}
-	\date{December, 13 2018}
+	{\large E511 - Machine Learning for Signal Processing - Final Project}}
+	\author{Jonathan Branam, Jamie Israel, Jinju (Hellen) Jiang}
+	\date{December, 14 2018}
 	\maketitle
 %
 % ^.
 % Write abstract here
 \begin{abstract}
-In this project we evaluated and implemented state of the art techniques to solve the monaural speech separation (diarization) problem using a variety of approached. We investigated classification, masking, and deep learning approaches to separate a generated set of mixed speech recordings.
+In this project we evaluated and implemented state of the art techniques to solve the monaural speech separation (diarization) problem using a variety of approaches. We investigated classification, masking, and deep learning approaches to separate a generated set of mixed speech recordings.
 \end{abstract}
 
 % Each section begins with a \section{title} command
 \section{Introduction}
-There have been several recent developments in the use of deep learning to perform speaker diarization, or separation of multiple speech signals from a single source into separate homogeneous signals representing each individual speaker. This task is particularly challenging where the input is monophonic, there is no control over environmental conditions, the number of speakers is unknown and there are no samples of the speakers from which to train. Using the CSR-I(WSJ0) Complete dataset\cite{garofolo:wsj0}, we tested several algorithms for accomplishing monaural speech separation including classification (KMeans), various masking approaches (Nonnegative Matrix Factorization [NMF], Ideal Ratio Mask[IRM], and complex Ideal Ratio Mask [cIRM]), and permutation-based deep learning approaches (Permutation Invariant Training [PIT] and utterance-level Permutation Invariant Training [uPIT]).
+There have been several recent developments in the use of deep learning to perform speaker diarization, or separation of multiple speech signals from a single source into separate homogeneous signals representing each individual speaker. This task is particularly challenging where the input is monophonic, there is no control over environmental conditions, the number of speakers is unknown and there are no samples of the speakers from which to train. Using the wsj0-mix dataset \cite{wsjmix}, we tested several algorithms for accomplishing monaural speech separation including classification ($k$-means), various masking approaches (Nonnegative Matrix Factorization [NMF], Ideal Ratio Mask [IRM], and complex Ideal Ratio Mask [cIRM]), and permutation-based deep learning approaches (Permutation Invariant Training [PIT] and utterance-level Permutation Invariant Training [uPIT]).
 
 The motivating application is to separate agent and customer utterances from call center recordings, which involve short duration speech with occasional cross talk and at least one unknown speaker.
 
@@ -160,42 +160,40 @@ The motivating application is to separate agent and customer utterances from cal
 
 \subsection{Signal Approximation}
 
-There are several approaches to signal separation (e.g., denoising, diarization) based on the general concept that audio can be represented as the combination of a frequency matrix and a corresponding matrix temporal activations. As a supervised learning problem, a time-frequency  representation can be used to emphasize the points at which a target signal dominates the mixed audio and deemphasize the points where an alternate speaker (or other noise source) predominates.\cite{DBLP:journals/corr/abs-1708-07524}
+There are several approaches to signal separation (e.g., denoising, diarization) based on the general concept that audio can be represented as the combination of a frequency matrix and a corresponding matrix of temporal activations. As a supervised learning problem, a time-frequency  representation can be used to emphasize the points at which a target signal dominates the mixed audio and deemphasize the points where an alternate speaker (or other noise source) predominates.\cite{DBLP:journals/corr/abs-1708-07524}
 
 Masking functions range from the Ideal Binary Mask (IBM), in which a masking matrix is used to turn certain frequencies on or off at given moments based on a binary (0/1) assessment of the dominant source at the given time and frequency.\cite{DBLP:journals/corr/abs-1708-07524} IRM provides a more nuanced approach by representing the relative dominance of each source at a given time and frequency as a ratio of the source signals rather than a binary mask. And, cIRM is an Ideal Ratio Mask calculated in the complex domain, which allows for a full reconstruction of the audio signal. \cite{DBLP:journals/corr/abs-1708-07524} 
 
-Each of the aforementioned masking models relies on a global representation of the frequency spectrum associated with a given audio sample.  More recently, probabilistic approaches have been used to represent the signal as a collection of frequency spectrum (hidden states) over time. On such approach, Nonnegative Hidden Markov Model (N-HMM), models a magnitude spectrogram for each latent component (source) at a given time frame as one of many states; like a traditional HMM, movement between states - and the spectral representation governing each latent component - is learned and defined by a transition matrix. 
+Each of the aforementioned masking models relies on a global representation of the frequency spectrum associated with a given audio sample.  More recently, probabilistic approaches have been used to represent the signal as a collection of frequency spectrum (hidden states) over time. One such approach, Nonnegative Hidden Markov Model (N-HMM), models a magnitude spectrogram for each latent component (source) at a given time frame as one of many states; like a traditional HMM, movement between states - and the spectral representation governing each latent component - is learned and defined by a transition matrix. 
 \cite{10.1007/978-3-642-15995-4_18}
 
 \subsection{Deep Learning Approaches}
 
-A seminal paper in applying deep learning to the task of speaker diarization was the Deep Clustering (DPCL) \cite{DBLP:journals/corr/HersheyCRW15} approach proposed by Hershey, et. al. They divided the task of separating source signals into two steps. The first step is to use a deep neural network to learn a set of embeddings that estimate a class-independent, low-rank pairwise affinity matrix. These embeddings are trained to minimize the distance between embeddings in the same partition while maximizing the distances between embeddings in different partitions. The partitions used in their technique do not include class labels so the model does not assign a particular class to each embedding. The resulting embeddings can then be separated using simple clustering algorithms such as $k$-means. This is in contrast to previous work that relies on \textit{spectral clustering} for segmentation which uses local affinity measures to optimize an objective function using spectral decomposition. The approach of Hershey, et. al. is typical in current research for deep learning: rather than using a complicated set of specially designed features, the deep clustering approach uses a deep neural network to discover the best features for producing the desired partitions.
+A seminal paper in applying deep learning to the task of speaker diarization was the Deep Clustering (DPCL) \cite{DBLP:journals/corr/HersheyCRW15} approach proposed by Hershey, et al. This paper divides the task of separating source signals into two steps. The first step is to use a deep neural network to learn a set of embeddings that estimate a class-independent, low-rank pairwise affinity matrix. These embeddings are trained to minimize the distance between embeddings in the same speaker partition while maximizing the distances between embeddings in different partitions. The partitions used in their technique do not include class labels so the model does not assign a particular class to each embedding. The resulting embeddings can then be separated using simple clustering algorithms such as $k$-means. This is in contrast to previous work that relies on \textit{spectral clustering} for segmentation which uses local affinity measures to optimize an objective function using spectral decomposition. The approach of Hershey, et al. is typical of current research for deep learning: rather than using a complicated set of specially designed features, the deep clustering approach uses a deep neural network to discover the best features for producing the desired partitions.
 
-This work is also important because it introduced a new training dataset for the task of monaural speech separation. The authors found that existing datasets were too limited in size or were not well fitted to their task. The deep learning techniques also require a large training set and so the authors adapted the Wall Street Journal (WSJ0) \cite{garofolo:wsj0} single-channel speaker corpus to produce a new dataset called WSJ0-2mix \cite{WSJmix} that was used by the later literature for comparison with DPCL.
+This work is also important because it introduced a new training dataset for the task of monaural speech separation. The authors found that existing datasets were too limited in size or were not well suited to their task. Deep learning techniques also require a large training set and so the authors adapted the CSR-I (WSJ0) Complete \cite{garofolo:wsj0} single-channel speaker corpus to produce a new dataset called wsj0-mix \cite{wsjmix} that was used by the later literature for comparison with DPCL.
 
-The Deep Clustering technique achieved Signal-to-Distortion (SDR) improvements of up to 6 dB which outperformed their baseline of an oracle NMF approach of 5 dB SDR which was trained on the clean speaker sources. It is worth noting the these initial results were improved to 10.3 dB by further optimization of the model by using a deeper architecture, a longer temporal context, and improving the regularization of the network by \cite{DBLP:journals/corr/IsikRCWH16}. This advancement shows the improvements possible by tuning hyper-parameters of a deep learning model when applied to the task of speaker diarization.
+DPCL achieved Signal-to-Distortion (SDR) improvements of up to 6 dB which outperformed their baseline oracle NMF approach of 5 dB SDR which was trained on the clean speaker sources. It is worth noting that these initial results were improved to 10.3 dB by further optimization of the model by using a deeper architecture, a longer temporal context, and improving the regularization of the network by Isik, et al. called DPCL+ \cite{DBLP:journals/corr/IsikRCWH16}. This advancement shows the improvements possible by tuning hyper-parameters of a deep learning model when applied to the task of speaker diarization.
 
-One of the biggest problems plaguing deep learning techniques in source separation is the \textit{label permutation problem} which is that most separation algorithms must provide the reference magnitudes to the output layers of the network to compute the error. The ordering of these source streams is ambiguous and imposes an outside and unnecessary constraint on the training process. Note that DPCL, discussed above, avoids this problem due to its treatment of the source separation problem as a partitioning problem. Although DPCL was successful, it made a simplifying assumption that each time-frequency bin was assigned to a single speaker (determined by the results of clustering). In \cite{DBLP:journals/corr/YuKTJ16} Yu, et. al. proposed a new technique called permutation invariant training (PIT) that avoids the label ambiguity problem by treating the reference source streams as a set rather than an ordered list. One key innovation of PIT is to directly train on all possible permutations of sources ($S!$ possible assignments) and to compute the combined pairwise MSE for every assignment between each reference and the estimated source. PIT then directly minimized the MSE of the assignment with the lowest total MSE of every permutation. This means that the model is directly trained on label assignment and error evaluation.
+One of the biggest problems plaguing deep learning techniques in source separation is the \textit{label permutation problem} which is that most separation algorithms must provide the reference magnitudes to the output layers of the network to compute the error. The ordering of these source streams is ambiguous and imposes an outside and unnecessary constraint on the training process. Note that DPCL, discussed above, avoids this problem due to its treatment of the source separation problem as a partitioning problem. In \cite{DBLP:journals/corr/YuKTJ16} Yu, et al. proposed a new technique called permutation invariant training (PIT) that avoids the label permutation problem by treating the reference source streams as a set rather than an ordered list. PIT trains the network on all possible permutations of sources ($S!$ possible assignments) and computes the combined pairwise MSE for every assignment between each reference and the estimated source. PIT then directly minimizes the MSE of the assignment with the lowest total MSE of every permutation. This means that the model is learns the ideal label assignment for each meta-frame.
 
 PIT operates on a sequence of $N$ input frames termed a \textit{meta-frame} in order to make use of the available contextual information in the sequence. It also produces a window of frames as an output and minimizes the separation error at this meta-frame level. Since the input is shifted one (or more) frames and a new meta-frame is computed and the assignment is computed for each meta-frame, the output of PIT may produce different speaker assignments for each frame. This means that, although the label permutation problem at training time has been resolved, the output of PIT can still be improved by tracing the speaker assignments for each frame as a post-processing step.
 
-The results of PIT are impressive and exceed 10 dB SDR improvements for the DNN and CNN approaches with optimal speaker assignment. The ideal ratio mask (IRM) results indicate the best possible improvement and are only slightly better than PIT with 12.3 dB SDR. Optimal speaker assignment means that as a post-processing step the speaker assignment from PIT is improved by tracing the speakers across meta-frames and determining the optimal speaker assignment for each frame. This improves performance because the PIT method assumes that the output-speaker does not switch across frames. Without the optimal assignment the performance of PIT degrades from a high of 10.9 dB to 5.6 - 7.8 dB.
+The results of PIT are impressive and exceed 10 dB SDR improvements for the DNN and CNN approaches with optimal speaker assignment. The ideal ratio mask (IRM) results indicate the best possible improvement and are only slightly better than PIT with 12.3 dB SDR. Optimal speaker assignment means that as a post-processing step the speaker assignment from PIT is improved by tracing the speakers across meta-frames and determining the optimal speaker assignment for each frame. This improves performance because PIT assumes that the output-speaker does not switch across frames. Without the optimal assignment the performance of PIT degrades from a high of 10.9 dB to 5.6 - 7.8 dB.
 
+The authors of PIT further improved their technique by proposing uPIT which is an enhancement to PIT that includes an utterance-level cost function which solves the speaker tracing problem by causing the Recurrent Neural Network (RNN) to align frames from a particular speaker to the same output stream. uPIT (like PIT) is also a much simpler model than other proposed deep learning algorithms and the trained networks have strong generalization performance to unseen data. In the original PIT algorithm the optimal permutation is computed for each meta-frame which can result in the assignment of speakers to output streams to switch during inference. With uPIT the optimal permutation is calculated across the entire utterance assuming the same assignment for all output frames. This works in practice by using recurrent neural networks such as deep LSTM (long short-term memory) RNNs and bi-directional LSTM RNNs.
 
-The authors of PIT improved their technique by proposing uPIT which is an enhancement to PIT that includes an utterance-level cost function which solves the speaker tracing problem by causing the Recurrent Neural Network (RNN) to align frames from a particular speaker to the same output stream. uPIT (like PIT) is also a much simpler model than other proposed deep learning algorithms and the trained networks have strong generalization performance to unseen data. In the original PIT algorithm the optimal permutation is computed for each meta-frame which can result in the assignment of speakers to output streams to switch during inference. With uPIT the optimal permutation is calculated across the entire utterance assuming the same assignment for all output frames. This works in practice by using recurrent neural networks such as deep LSTM (long short-term memory) RNNs and bi-directional LSTM RNNs. Since a recurrent neural network has access to data from past frames (and in a BLSTM information both the past and future frames are available) uPIT does not need to be trained on a meta-frame of $N$ stacked frames as PIT did.
-
-The results of uPIT are similar to the performance of PIT with optimal speaker tracing. Using a BLSTM and a phase sensitive mask (PSM, also referred to as a cIRM - a complex ideal ratio mask) uPIT achieves results near 11 dB SDR. The maximum performance from the ideal PSM is about 15 dB SDR (an improvement over the 12.5 dB SDR possible with a standard IRM). Based on its performance and (relative) simplicity We chose uPIT as the deep learning solution that we evaluated in our project.
+The results of uPIT are similar to the performance of PIT with optimal speaker tracing. Using a BLSTM and a phase sensitive mask (PSM, also referred to as a cIRM - a complex ideal ratio mask) uPIT achieves results near 11 dB SDR. The maximum performance from the ideal PSM is about 15 dB SDR (an improvement over the 12.5 dB SDR possible with a magnitude IRM). Based on its performance and (relative) simplicity we chose uPIT as the deep learning solution that we evaluated in our project.
 
 
 \section{Dataset Preparation}
 \subsection{CSR-I (WSJ0) Complete}
-For purposes of comparison with existing scholarship, each approach was developed based on a mixture of audio extracted from the WSJ0 dataset, a corpus of read speech texts drawn from articles in the Wall Street Journal. WSJ0 \cite{garofolo:wsj0} consists of over 35,000 audio samples organized into training and evaluation data sets organized by speaker and gender. The audio files are stored in a format called Sphere using the Shorten compression algorithm. The Linguistic Data Consortium website provides a small utility called sph2pipe \cite{ldc:sph2pipe} which we used to convert the files from the Sphere format to waveform format. We wrote a small script to automate this process and also to merge the separate disks of the WSJ0 dataset into a single folder.
+For purposes of comparison with existing scholarship, each approach was developed based on a mixture of audio extracted from the WSJ0 dataset, a corpus of read speech texts drawn from articles in the Wall Street Journal. WSJ0 \cite{garofolo:wsj0} consists of over 35,000 audio samples organized into training and evaluation data sets organized by speaker and gender. The audio files are stored in a format called Sphere using the Shorten compression algorithm. The Linguistic Data Consortium website provides a  utility called sph2pipe \cite{ldc:sph2pipe} which we used to convert the files from the Sphere format to waveform format.
 
 \subsection{WSJ0-mix}
-The WSJ0-mix dataset was developed by the authors of the DPCL \cite{DBLP:journals/corr/HersheyCRW15} paper by mixing selections from the WSJ0 training set \texttt{si\_tr\_s} and mixing them together with different levels of signal-to-noise ratios (SNR) selected from 0 dB to 5dB. An additional cross validation was also generated from the training data and an evaluation set was generated with the same process but using the WSJ0 evaluation set \texttt{si\_et\_05} and development set \texttt{si\_dt\_05} which use different speakers than the training set. We found the definition of these mixtures and MATLABS scripts \cite{WSJmix} to produce the dataset from the WSJ0 data. We made some small adjustments to the scripts so that they would run in Octave, a free, open-source alternative to MATLAB, and to skip the step of generating 16 kHz outputs and the 3-speaker mixtures since we would not be using them.
+The WSJ0-mix dataset was developed by the authors of the DPCL \cite{DBLP:journals/corr/HersheyCRW15} paper by mixing selections from the WSJ0 training set \texttt{si\_tr\_s} together with different levels of signal-to-noise ratios (SNR) selected from 0 dB to 5dB. An additional cross validation set was also generated from the training data and an evaluation set was generated with the same process using the WSJ0 evaluation set \texttt{si\_et\_05} and development set \texttt{si\_dt\_05} which use different speakers than the training set. We found the definition of these mixtures and MATLAB scripts \cite{wsjmix} to produce the dataset from the WSJ0 data.
 
-The scripts produce 20,000 training files, 5,000 cross validation files, and 3,000 test files. Each of these includes the mixed audio as well as the independent sources which have had the correct SNR adjustments made to them. We further selected 1,000 training examples and 100 cross-validation and testing examples since we our algorithm was not able to finish running on the full dataset.
-
+The scripts produce 20,000 training files, 5,000 cross validation files, and 3,000 test files. We further selected 1,000 training examples and 100 cross-validation and testing examples since we our algorithm was not able to finish running on the full dataset.
 
 \section{Speech Separation Algorithms}
 \subsection{KMeans}
@@ -209,31 +207,30 @@ The technique of speaker diarization relies on a big pipeline with following ste
 \subsubsection{Feature Extraction}
 In this project, we used 3 approaches to extract features:
 \begin{itemize}
-    \item A chroma vector (Wikipedia) (FMP, p. 123) is a typically a 12-element feature vector indicating how much energy of each pitch class, {C, C\#, D, D\#, E, ..., B}, is present in the signal. Then use mean of each element as one of input for clustering.
-    \item The mel frequency cepstral coefficients (MFCCs) of a signal are a small set of features  which concisely describe the overall shape of a spectral envelope. In this case, mfcc computed 13 MFCCs.The very first MFCC, the 0th coefficient, does not convey information relevant to the overall shape of the spectrum. It only conveys a constant offset, i.e. adding a constant value to the entire spectrum. Therefore, here I discard the first MFCC, then I scale the MFCCs such that each coefficient dimension has zero mean and unit variance.Then use mean of MFCCS as one part of input for clustering.
+    \item A chroma vector (Wikipedia) that consists of 12 feature vectors indicating how much energy of each pitch class. In the signal we used the same notation as used in Western music notation, to present every pitch class. Then use mean of each element as one of input for clustering.
+    \item MFCCs (Wikipedia) are commonly used as features in speech recognition systems, such as the systems which can automatically recognize numbers spoken into a telephone. In this experiment, mfcc computed 13 MFCCs.The first MFCC does not represent information related to the overall shape of the spectrum. It only contains a constant offset. Therefore, here I discard the first MFCC, then I scale the MFCCs such that each coefficient dimension has zero mean and unit variance. Then use mean of MFCCs as one part of input for clustering.
     \item We divide the audio signal into smaller frames. In smaller time scales audio signals are statistically unchanged. Then for each smaller frames we compute the power spectrum of the signal, and use it as the third part of input for clustering.
 \end{itemize}
-\subsubsection{Speaker segmentation}\cite{Segmentation} Speaker segmentation which is also known as acoustic change detection aims to detect speaker change such that each contiguous segment corresponds to single speaker only. To find if the two segments correspond to same speaker we have to define some notion of distance metric. In this case, I skipped this step and used the features extrated from above steps as input for kmeans clustering.
+\subsubsection{Speaker segmentation}\cite{Segmentation} Speaker segmentation is to split an audio stream into smaller segments, so as every segment ideally contains only one speaker. So the key point for speech segment is to find out the change point where speakers changed at that point. For example, in our training data, we have conversation between customer service(speaker 0) and customer(speak 1), so we need to find out each change point speaker 0 to speaker 1 or vice versa. In this case, I skipped this step and used the features extracted from above steps as input for kmeans clustering.
 \subsubsection{Kmeans Clustering}
-Since we knew that the audio from call center is the conversation between 2 speakers(customer service and customer), we set k=2 for kmeans clustering.\\
-The results for kmeans speaker diarization are shown in Figure\ref{Fig:speaker diarization 1} and Figure \ref{Fig:speaker diarization 2}.
+Since we knew that the audio from call center is the conversation between 2 speakers(customer service and customer), we set k=2 for kmeans clustering. The results for kmeans speaker diarization are shown in Figure\ref{Fig:speaker diarization 1} and Figure \ref{Fig:speaker diarization 2}.
 \begin{figure}[h!]
     \centering  
-     \caption{\label{Fig:speaker diarization 1}2 speakers diarization}  
+     \caption{\label{Fig:speaker diarization 1}2 speakers diarization output}  
     \includegraphics[width=0.4\textwidth]{kmeans01.png} 
 \end{figure}
 
 \begin{figure}[h!]
     \centering  
-     \caption{\label{Fig:speaker diarization 2}2 speakers diarization}  
+     \caption{\label{Fig:speaker diarization 2}2 speakers diarization on spectrogram}  
     \includegraphics[width=0.4\textwidth]{kmeans02.png}
 \end{figure}
-\subsubsection{Evaluation\cite{Segmentation}}The common metric to measure how good/bad for speaker diarization experiments is the Diarization Error Rate(DER), it contains 3 main parts:
+\subsubsection{Evaluation\cite{Segmentation}}The common metric to measure how good/bad for speaker diarization experiments is the Diarization Error Rate (DER), it contains 3 main parts:
 \begin{itemize}
-    \item The first one is called Missed Speech Rate(MSR), whichi is percentage of scored time that a hypothesized non-speech segment corresponds to a reference speaker segment.
+    \item The first one is called Missed Speech Rate (MSR), which is percentage of scored time that a hypothesized non-speech segment corresponds to a reference speaker segment.
     \item The second one is False alarm speech rate (FASR), which is percentage of scored time that a hypothesized speaker is labelled as a non-speech in the reference.
-    \item The third one is Speaker error rate(SER), which is percentage of scored time that a speaker ID is assigned to the wrong speaker.
-    \item The last one is Overlap speaker rate(OSR), which is percentage of scored time that some of the multiple speakers in a segment do not get assigned to any speaker.
+    \item The third one is Speaker error rate (SER), which is percentage of scored time that a speaker ID is assigned to the wrong speaker.
+    \item The last one is Overlap speaker rate (OSR), which is percentage of scored time that some of the multiple speakers in a segment do not get assigned to any speaker.
 \end{itemize}
 
 So the Diarization Error Rate(DER) can be calculated as the sum of the above 4 rates(MSR+FASR+SER+OSR)\\
@@ -242,7 +239,7 @@ In this case, we don't have any labeled data to identify which segmentation is s
 \subsection{NMF, IRM and cIRM}
 Nonnegative matrix factorization (NMF) is used to represent high-dimensional data as the product of two matrices (typically referenced as $W$ and $H$). In the case of an audio signal, these matrices can be viewed as a representation of the signal's frequency spectrum ($W$) and the corresponding activations ($H$).
 
-To perform NMF, we transformed isolated audio samples of two speakers (speaker 1 and speaker 2) to a frequency-time representation using short-time Fourier transform (STFT) before decomposing each signal using the following iterative update rules:
+To perform NMF, we transformed isolated audio samples of two speakers (speaker 1 and speaker 2) to a time-frequency representation using short-time Fourier transform (STFT) before decomposing each signal using the following iterative update rules:
 
 \begin{equation}
 \begin{array}{ll}
@@ -251,7 +248,7 @@ H = H \bigodot \frac{W^T\frac{X}{WH}}{W^T1^{FxT}}
 \end{array}
 \end{equation}
 
-Using the frequency matrices associated with the sample from each speaker, a new set of activations ($W$) was generated from the mixed signal composed of both individual samples. A magnitude masking matrix, reflecting the magnitudes associated with the frequency representation for each speaker at each time frame, was generated using this new set of activations and the following formula:
+Using the frequency matrices associated with the sample from each speaker, a new set of activations ($H$) was generated from the mixed signal composed of both individual samples. A magnitude masking matrix, reflecting the magnitudes associated with the frequency representation for each speaker at each time frame, was generated using this new set of activations and the following formula:
 
 \begin{equation}
 \dfrac{W_{S1}H_{(1:30,:)}}
@@ -259,7 +256,7 @@ Using the frequency matrices associated with the sample from each speaker, a new
 \end{equation}
 
 \begin{flushleft}
-where S1 is the basis vector associated with the speaker 1 audio sample, S2 is the basis vector associated with the speaker 2 audio sample and H is the activation matrix generated from the combined speaker 1 and speaker 2 basis vectors.\cite{ClassNMF}
+where S1 is the basis vector associated with the speaker 1 audio sample, S2 is the basis vector associated with the speaker 2 audio sample and $H$ is the activation matrix generated from the combined speaker 1 and speaker 2 basis vectors.\cite{ClassNMF}
 \end{flushleft}
 
 Using the STFT of a single speaker audio sample (speaker 1) and the STFT of the mixed audio sample that included speaker 1 (Figure \ref{fig:spec_speaker_1}), an IRM was generated based on the formula:
@@ -299,7 +296,7 @@ where $S$ is the complex STFT representation generated from the isolated speaker
     \includegraphics[width=0.4\textwidth]{PIT.png}  
 \end{figure}
 
-Utterance-level Permutation Invariant Training (uPIT) is an advancement on the Permutation Invariant Training model depicted in Figure \ref{fig:pit_diagram} where the reference signals are provided to the training model as a set rather than a list by calculating the error on all permutations of the output signals and then optimizing the model on the permutation with the lowest mean squared error (MSE). A traditional approach is to minimize the MSE between the estimated masks and the ideal masks such as in
+Utterance-level Permutation Invariant Training (uPIT) is an improvement on the Permutation Invariant Training model depicted in Figure \ref{fig:pit_diagram} where the reference signals are provided to the training model as a set rather than a list by calculating the error on all permutations of the output signals and then optimizing the model on the permutation with the lowest mean squared error (MSE). A traditional approach is to minimize the MSE between the estimated masks and the ideal masks such as in
 
 \begin{equation}
 J_m = \dfrac{1}{B} \sum_{s=1}^S || \Hat{\mathbf{M}}_S - \mathbf{M}_S ||^2_F
@@ -335,7 +332,7 @@ With the NMF method, we were unable to generate a substantial separation between
   
         Method & SNR \\
         \midrule
-        NMF & 0.014 \\
+        NMF & 1.924 \\
         IRM & 6.380 \\
         cIRM & 15.070 \\
         \midrule
@@ -345,16 +342,13 @@ With the NMF method, we were unable to generate a substantial separation between
 
 \subsection{uPIT}
 
-Our implementation of uPIT uses a BLSTM with 3 hidden layers of size 896. We used the Adam optimizer and set a $0.5$ rate for dropout. We trained using Google Colab free instances which allow using a Tesla K80 GPU with 12 Gb or RAM. We found that training with 1,000 samples for 60 epochs took about 5 hours in this setup. The Google Colab GPU will disconnect after 12 hours so we were unable to complete a full training run. We experimented with saving off the model parameters and restarting the training once the 12 hours had expired but were unable to complete the implementation with enough time to train again.
+Our implementation of uPIT uses a BLSTM with 3 hidden layers of size 896. We used the Adam optimizer and a $0.5$ rate for dropout. We trained using Google Colab free instances which provide a Tesla K80 GPU with 12 Gb of RAM. We found that training with 1,000 samples for 60 epochs took about 5 hours in this setup. The Google Colab GPU will disconnect after 12 hours so we were unable to complete a full training run. We experimented with saving off the model parameters and restarting the training once the 12 hours had expired but were unable to complete the implementation with enough time to train again.
 
-Our results with uPIT were not very good, probably due to the small training size that we used. We were able to find two open source implementations of uPIT one of them we used as a reference only [CITE 1] and the other [CITE 2] we were able to actually implement in order to verify our results. The author was able to achieve results comparable to those published in the uPIT paper and he agreed that we should not expect to match the paper's performance unless we are able to train on the full dataset.
-
-
+Our results with uPIT were not very good, probably due to the small training size that we used. We were able to find two open source implementations of uPIT one of them we used as a reference \cite{upit2} and the other \cite{upit1} we were able to use in order to verify our results. The author was able to achieve results comparable to those published in the uPIT paper and he agreed that we should not expect to match the paper's performance unless we are able to train on the full dataset.
 
 \section{Conclusion}
-We got our best results from the cIRM with NMF separation. uPIT needed more training time and Kmeans...
+Through our research we learned about many different approaches to solving the problem of monaural speech separation and the difficulties inherent in this task, especially when clean speaker sources are not available at inference. We got our best results from the cIRM with NMF separation since this model was able to utilize clean speaker sources. The $k$-means approach was not fully tested on error rates or SDR improvement. Due to resource constraints we were never able to fully train and test our uPIT implementation, but it was based on completed work which achieved over 10 dB SDR improvement.
 
-\newline 
 % Now we need a bibliography:
 
 \bibliographystyle{plain} % We choose the "plain" reference style
