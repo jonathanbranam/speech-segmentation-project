@@ -66,11 +66,13 @@ def NMFH(X, S1W, S2W, max_iter=1000):
     Returns:
 
     H: temporal activations correponding to the input basis vectors (W) in form (W.shape[1], STFT time bins)
+    W1W2: concatenation of basis vectors associated with original source audioSS
     """
     
+   
+    W = np.concatenate((S1W, S2W), axis=1)
+    W = np.where(W==0, 1e-20, W)
     H = random.rand(W.shape[1],X.shape[1])
-    W1W2 = np.concatenate((S1W, S2W), axis=1)
-    W1W2 = np.where(W1W2==0, 1e-20, W1W2)
     
     for i in range(max_iter):
         Hfrac = np.dot(W.T, (X/np.dot(W,H))) / np.dot(W.T, np.ones((X.shape[0],X.shape[1])))
@@ -82,9 +84,9 @@ def NMFH(X, S1W, S2W, max_iter=1000):
 
         H = Hnew
 
-    return H
+    return H, W
 
-def NMFtransform(W1W2H, ZX):
+def NMFtransform(W1W2H, W1W2, W1, W2, ZX):
 
     """
     Separate speech using NMF mask from previously generated basis vectors and joint activations.
@@ -100,10 +102,10 @@ def NMFtransform(W1W2H, ZX):
     speaker2: recovered signal for speaker 2 in the original audio domain
     """
     
-    bv1 = S1W.shape[1]
-    bv2 = S2W.shape[1]
-    M1 = np.dot(S1W,WS1WS2H[:bv1,:]) / np.dot(W1W2, WS1WS2H)
-    M2 = np.dot(S2W,WS1WS2H[bv1:bv2,:]) / np.dot(W1W2, WS1WS2H)
+    bv1 = W1.shape[1]
+    bv2 = W2.shape[1]
+    M1 = np.dot(W1,W1W2H[:bv1,:]) / np.dot(W1W2, W1W2H)
+    M2 = np.dot(W2,W1W2H[bv1:,:]) / np.dot(W1W2, W1W2H)
     SX1 = np.multiply(M1,ZX)
     SX2 = np.multiply(M2,ZX)
     _, speaker1 = istft(SX1)
